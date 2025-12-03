@@ -1,26 +1,30 @@
-import { loginPage } from '../pages/Login';
-import { homePage } from '../pages/HomePage';
+// cypress/e2e/pages/Login.js
 
-describe('POP Login Logout Testleri', () => {
+class LoginPage {
+  emailInput() {
+    return cy.get('input[name="email"]');
+  }
 
-    it('user888 login logout yapar', () => {
-        loginPage.visit();
-        loginPage.login('user888@gmail.com', '1234567890');
+  passwordInput() {
+    return cy.get('input[name="password"]');
+  }
 
-        cy.wait(3000);
+  loginButton() {
+    return cy.get('button[type="submit"]');
+  }
 
-        homePage.openMenu();
-        homePage.logout();
-    });
+  visit() {
+    cy.visit('https://www.edu.goit.global/account/login');
+  }
 
-    it('testowyqa login logout yapar', () => {
-        loginPage.visit();
-        loginPage.login('testowyqa@qa.team', 'QA!automation-1');
+  login(email, password) {
+    this.emailInput().type(email);
+    this.passwordInput().type(password);
+    this.loginButton().click();
 
-        cy.wait(3000);
+    // Login başarılı mı
+    cy.url({ timeout: 20000 }).should('include', '/homepage');
+  }
+}
 
-        homePage.openMenu();
-        homePage.logout();
-    });
-
-});
+export const loginPage = new LoginPage();

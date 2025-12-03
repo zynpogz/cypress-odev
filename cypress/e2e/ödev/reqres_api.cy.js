@@ -1,133 +1,104 @@
-// cypress/e2e/DERS-5/reqres_api.cy.js
+/// <reference types="cypress" />
 
-describe('ReqRes API Testing', () => {
-    const baseUrl = 'https://reqres.in';
+describe("FakeStore API Testing", () => {
 
-    // TC01 - Basit GET isteği (liste)
-    it('TC01 - GET /api/users?page=1 - Listeyi döndürmeli', () => {
-        cy.request(`${baseUrl}/api/users?page=1`).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body).to.have.property('page', 1);
-            expect(response.body.data).to.be.an('array').and.not.be.empty;
+    const baseUrl = "https://fakestoreapi.com";
+
+    // 1 - GET ürün listesi
+    it("TC01 - GET /products → 200 ve array dönmeli", () => {
+        cy.request(`${baseUrl}/products`).then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body).to.be.an("array");
         });
     });
 
-    // TC02 - GET single user (path param)
-    it('TC02 - GET /api/users/2 - Kullanıcı detayını döndürmeli', () => {
-        cy.request(`${baseUrl}/api/users/2`).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body.data).to.have.property('id', 2);
-            expect(response.body.data.email).to.include('@reqres.in');
+    // 2 - GET tek ürün
+    it("TC02 - GET /products/1 → 200 ve id=1 olmalı", () => {
+        cy.request(`${baseUrl}/products/1`).then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body.id).to.eq(1);
         });
     });
 
-    // TC03 - GET non-existing user (404, failOnStatusCode:false)
-    it('TC03 - GET /api/users/23 - 404 dönmeli', () => {
+    it('TC03 - GET /products/9999 -> expect empty object', () => {
+        const fakestore = Cypress.env('fakestore');
+
         cy.request({
-            method: 'GET',
-            url: `${baseUrl}/api/users/23`,
-            failOnStatusCode: false,
-        }).then((response) => {
-            expect(response.status).to.eq(404);
+            url: `${fakestore}/products/9999`,
+            failOnStatusCode: false
+        }).then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body).to.be.empty;
         });
     });
 
-    // TC04 - Dinamik query param (rastgele page)
-    it('TC04 - GET /api/users?page={rastgele} - Query param doğru gelmeli', () => {
-        const randomPage = Math.floor(Math.random() * 2) + 1; // 1 veya 2
+    it('TC04 - POST /products', () => {
+        const fakestore = Cypress.env('fakestore');
 
-        const rq = {
-            method: 'GET',
-            url: `${baseUrl}/api/users`,
-            qs: { page: randomPage },
-        };
-
-        cy.request(rq).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body.page).to.eq(randomPage);
+        cy.request("POST", `${fakestore}/products`, {
+            name: "Zeynep",
+            job: "QA Tester",
+            category: "test"
+        }).then((res) => {
+            expect(res.status).to.eq(201);
+            expect(res.body).to.have.property("id");
         });
     });
 
-    // TC05 - POST create user
-    it('TC05 - POST /api/users - Kullanici oluşturmali', () => {
-        const body = {
-            name: 'Zeynep',
-            job: 'QA Tester',
-        };
 
-        cy.request('POST', `${baseUrl}/api/users`, body).then((response) => {
-            expect(response.status).to.eq(201);
-            expect(response.body).to.have.property('name', body.name);
-            expect(response.body).to.have.property('job', body.job);
-            expect(response.body).to.have.property('id');
-            expect(response.body).to.have.property('createdAt');
+
+    // 5 - PUT ürün güncelle
+    it("TC05 - PUT /products/1 → 200", () => {
+        cy.request("PUT", `${baseUrl}/products/1`, {
+            title: "Zeynep Updated"
+        }).then((res) => {
+            expect(res.status).to.eq(200);
         });
     });
 
-    // TC06 - PUT update user
-    it('TC06 - PUT /api/users/2 - Kullanici bilgisi güncellenmeli', () => {
-        const body = {
-            name: 'Zeynep',
-            job: 'QA Lead',
-        };
-
-        cy.request('PUT', `${baseUrl}/api/users/2`, body).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body).to.have.property('job', body.job);
-            expect(response.body).to.have.property('updatedAt');
+    // 6 - DELETE ürün sil
+    it("TC06 - DELETE /products/1 → 200", () => {
+        cy.request("DELETE", `${baseUrl}/products/1`).then((res) => {
+            expect(res.status).to.eq(200);
         });
     });
 
-    // TC07 - PATCH update user
-    it('TC07 - PATCH /api/users/2 - Kullanicinin işi güncellenmeli', () => {
-        const body = {
-            job: 'Senior QA',
-        };
-
-        cy.request('PATCH', `${baseUrl}/api/users/2`, body).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body).to.have.property('job', body.job);
-            expect(response.body).to.have.property('updatedAt');
+    // 7 - Custom Header testi
+    it("TC07 - GET /products?limit=5 with custom header", () => {
+        cy.request({
+            method: "GET",
+            url: `${baseUrl}/products?limit=5`,
+            headers: { "X-Test-Header": "Zeynep123" }
+        }).then((res) => {
+            expect(res.status).to.eq(200);
         });
     });
 
-    // TC08 - DELETE user
-    it('TC08 - DELETE /api/users/2 - 204 dönmeli', () => {
-        cy.request('DELETE', `${baseUrl}/api/users/2`).then((response) => {
-            expect(response.status).to.eq(204);
-            expect(response.body).to.be.empty;
+    // 8 - Query param testi
+    it("TC08 - GET /products?limit=2 → 200", () => {
+        cy.request({
+            method: "GET",
+            url: `${baseUrl}/products`,
+            qs: { limit: 2 }
+        }).then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body.length).to.eq(2);
         });
     });
 
-    // TC09 - Özel header gönderme ve doğrulama
-    it('TC09 - GET /api/users ile custom header gönderilmeli', () => {
-        const rq = {
-            method: 'GET',
-            url: `${baseUrl}/api/users?page=2`,
-            headers: {
-                'X-Custom-Header': 'test-header',
-            },
-        };
-
-        cy.request(rq).then((response) => {
-            expect(response.status).to.eq(200);
-            // İstek ile giden header'ları Cypress response.requestHeaders içinde tutar
-            expect(response.requestHeaders).to.have.property(
-                'x-custom-header',
-                'test-header'
-            );
-            // Standart header örneği
-            expect(response.requestHeaders).to.have.property('user-agent');
+    // 9 - Body içinde title var mı
+    it("TC09 - Ürün listesi body → title içermeli", () => {
+        cy.request(`${baseUrl}/products`).then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body[0]).to.have.property("title");
         });
     });
 
-    // TC10 - Response time ölçme
-    it('TC10 - GET /api/users?page=1 - Response süresi 5000ms altında olmalı', () => {
-        cy.request(`${baseUrl}/api/users?page=1`).then((response) => {
-            // duration ms cinsinden
-            expect(response.duration).to.be.a('number');
-            expect(response.duration).to.be.lessThan(5000); // 5 saniyeden kısa olmalı
-            cy.log('Response time (ms): ', response.duration);
+    // 10 - Response time testi
+    it("TC10 - Response time < 1000ms", () => {
+        cy.request(`${baseUrl}/products`).then((res) => {
+            expect(res.duration).to.be.lessThan(1000);
         });
     });
+
 });

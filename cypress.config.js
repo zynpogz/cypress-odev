@@ -1,6 +1,10 @@
-module.exports = {
-  e2e: {
-    pageLoadTimeout: 120000
-  }
-}
+const { defineConfig } = require("cypress");
 
+module.exports = defineConfig({
+  e2e: {
+    baseUrl: "https://reqres.in",
+    env: {
+      fakestore: "https://fakestoreapi.com"
+    }
+  }
+});

@@ -1,7 +1,9 @@
-class HomePage {
+// cypress/e2e/pages/HomePage.js
 
+class HomePage {
     burgerMenu() {
-        return cy.get('#open-navigation-menu-mobile');
+        //  element gelene kadar 20 sn bekle
+        return cy.get('#open-navigation-menu-mobile', { timeout: 20000 });
     }
 
     logoutButton() {

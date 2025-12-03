@@ -1,5 +1,6 @@
-class LoginPage {
+// cypress/e2e/pages/Login.js
 
+class LoginPage {
     emailInput() {
         return cy.get('input[name="email"]');
     }
@@ -20,6 +21,9 @@ class LoginPage {
         this.emailInput().type(email);
         this.passwordInput().type(password);
         this.loginButton().click();
+
+        // ✅ Login başarılı mı, gerçekten homepage’e geçtik mi?
+        cy.url({ timeout: 20000 }).should('include', '/homepage');
     }
 }
 
